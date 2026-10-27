@@ -67,5 +67,5 @@
         "*.sln": "*.csproj",
         "*.slnx": "*.csproj"
     },
-    "dotnet.defaultSolution": "Telimenia_10_26.slnx"
+    "dotnet.defaultSolution": "TILEMANIALAB.slnx"
 }
