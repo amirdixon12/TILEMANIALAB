@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 5502073539434217821}
   - component: {fileID: 6703452246198958586}
   - component: {fileID: 6774199162243355240}
+  - component: {fileID: 4072260415236441230}
   m_Layer: 0
   m_Name: GameObject
   m_TagString: Untagged
@@ -152,8 +153,8 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -0.062, y: 0}
-  m_Size: {x: 0.8743, y: 1}
+  m_Offset: {x: -0.062000036, y: 0.00000011920929}
+  m_Size: {x: 0.8743005, y: 0.8743007}
   m_Direction: 0
 --- !u!50 &6703452246198958586
 Rigidbody2D:
@@ -212,3 +213,27 @@ MonoBehaviour:
   m_DefaultActionMap: 
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 0}
+--- !u!114 &4072260415236441230
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1511319017832972052}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f22a2f36ea7ccd4493d8a55b1f27a20, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::playermovement
+  moveSpeed: 5
+  sprintSpeed: 8
+  jumpVelocity: 10
+  climbSpeed: 3
+  groundLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  ladderLayers:
+    serializedVersion: 2
+    m_Bits: 64
+  rb: {fileID: 0}
+  playerSprite: {fileID: 0}

@@ -13938,7 +13938,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::playermovement
   moveSpeed: 5
+  sprintSpeed: 8
+  jumpVelocity: 10
+  climbSpeed: 3
+  groundLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  ladderLayers:
+    serializedVersion: 2
+    m_Bits: 64
   rb: {fileID: 0}
+  playerSprite: {fileID: 0}
 --- !u!1 &2145039751
 GameObject:
   m_ObjectHideFlags: 0
