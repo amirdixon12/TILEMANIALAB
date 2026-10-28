@@ -15,7 +15,7 @@ TagManager:
   - climbing
   - 
   - 
-  - 
+  - enemies
   - 
   - 
   - 
@@ -52,6 +52,9 @@ TagManager:
     locked: 0
   - name: climbing tilemap
     uniqueID: 1302773939
+    locked: 0
+  - name: enemy
+    uniqueID: 1453137011
     locked: 0
   - name: PLAYER LAYER
     uniqueID: 3116936849

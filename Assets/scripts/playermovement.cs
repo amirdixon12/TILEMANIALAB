@@ -25,6 +25,7 @@ public class PlayerMovement : MonoBehaviour
     private readonly HashSet<Collider2D> ladderColliders = new HashSet<Collider2D>();
     private float defaultGravityScale;
     private bool isGrounded;
+    private bool isDead;
     private int airJumpsRemaining;
 
     private void Reset()
@@ -193,6 +194,11 @@ public class PlayerMovement : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
+        if (DieOnEnemyContact(collision.gameObject))
+        {
+            return;
+        }
+
         UpdateGroundContact(collision);
     }
 
@@ -210,6 +216,11 @@ public class PlayerMovement : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
+        if (DieOnEnemyContact(other.gameObject))
+        {
+            return;
+        }
+
         RegisterLadder(other);
     }
 
@@ -234,6 +245,18 @@ public class PlayerMovement : MonoBehaviour
         wallContacts.Clear();
         ladderColliders.Clear();
         isGrounded = false;
+    }
+
+    private bool DieOnEnemyContact(GameObject other)
+    {
+        if (isDead || other.GetComponentInParent<enemymovement>() == null)
+        {
+            return false;
+        }
+
+        isDead = true;
+        Destroy(gameObject);
+        return true;
     }
 
     private void RegisterLadder(Collider2D other)
