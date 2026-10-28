@@ -227,7 +227,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::playermovement
   moveSpeed: 5
   sprintSpeed: 8
-  jumpVelocity: 10
+  jumpVelocity: 6
   climbSpeed: 3
   groundLayers:
     serializedVersion: 2

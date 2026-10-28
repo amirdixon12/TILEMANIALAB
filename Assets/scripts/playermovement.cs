@@ -7,7 +7,9 @@ public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private float sprintSpeed = 8f;
-    [SerializeField] private float jumpVelocity = 10f;
+    [SerializeField] private float jumpVelocity = 6f;
+    [SerializeField] private float wallJumpHorizontalSpeed = 7f;
+    [SerializeField] private int extraAirJumps = 1;
     [SerializeField] private float climbSpeed = 3f;
     [SerializeField] private LayerMask groundLayers = ~0;
     [SerializeField] private LayerMask ladderLayers;
@@ -19,9 +21,11 @@ public class PlayerMovement : MonoBehaviour
     private bool isSprinting;
     private Animator myanimator;
     private readonly HashSet<Collider2D> groundColliders = new HashSet<Collider2D>();
+    private readonly Dictionary<Collider2D, float> wallContacts = new Dictionary<Collider2D, float>();
     private readonly HashSet<Collider2D> ladderColliders = new HashSet<Collider2D>();
     private float defaultGravityScale;
     private bool isGrounded;
+    private int airJumpsRemaining;
 
     private void Reset()
     {
@@ -48,6 +52,7 @@ public class PlayerMovement : MonoBehaviour
         }
 
         defaultGravityScale = rb.gravityScale;
+        airJumpsRemaining = extraAirJumps;
     }
 
     public void OnMove(InputValue value)
@@ -64,7 +69,15 @@ public class PlayerMovement : MonoBehaviour
 
     public void OnJump(InputValue value)
     {
-        if (!value.isPressed || (!isGrounded && ladderColliders.Count == 0))
+        if (!value.isPressed)
+        {
+            return;
+        }
+
+        bool jumpingFromLadder = ladderColliders.Count > 0;
+        bool jumpingFromWall = wallContacts.Count > 0;
+        bool jumpingFromGround = isGrounded;
+        if (!jumpingFromGround && !jumpingFromLadder && !jumpingFromWall && airJumpsRemaining <= 0)
         {
             return;
         }
@@ -75,7 +88,25 @@ public class PlayerMovement : MonoBehaviour
             rb.gravityScale = defaultGravityScale;
         }
 
-        rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpVelocity);
+        if (jumpingFromWall)
+        {
+            float direction = GetWallJumpDirection();
+            rb.linearVelocity = new Vector2(direction * wallJumpHorizontalSpeed, jumpVelocity);
+            airJumpsRemaining = extraAirJumps;
+        }
+        else
+        {
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpVelocity);
+            if (jumpingFromGround || jumpingFromLadder)
+            {
+                airJumpsRemaining = extraAirJumps;
+            }
+            else
+            {
+                airJumpsRemaining--;
+            }
+        }
+
         groundColliders.Clear();
         isGrounded = false;
     }
@@ -149,9 +180,10 @@ public class PlayerMovement : MonoBehaviour
         if (onLadder)
         {
             rb.gravityScale = 0f;
-            rb.linearVelocity = new Vector2(
-                moveDirection.x * currentSpeed,
-                moveDirection.y * climbSpeed);
+            float climbDirection = Mathf.Abs(moveDirection.y) > 0.01f
+                ? Mathf.Sign(moveDirection.y)
+                : 0f;
+            rb.linearVelocity = new Vector2(0f, climbDirection * climbSpeed);
             return;
         }
 
@@ -172,15 +204,18 @@ public class PlayerMovement : MonoBehaviour
     private void OnCollisionExit2D(Collision2D collision)
     {
         groundColliders.Remove(collision.collider);
+        wallContacts.Remove(collision.collider);
         isGrounded = groundColliders.Count > 0;
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (IsInLayerMask(other.gameObject.layer, ladderLayers))
-        {
-            ladderColliders.Add(other);
-        }
+        RegisterLadder(other);
+    }
+
+    private void OnTriggerStay2D(Collider2D other)
+    {
+        RegisterLadder(other);
     }
 
     private void OnTriggerExit2D(Collider2D other)
@@ -196,24 +231,38 @@ public class PlayerMovement : MonoBehaviour
         }
 
         groundColliders.Clear();
+        wallContacts.Clear();
         ladderColliders.Clear();
         isGrounded = false;
+    }
+
+    private void RegisterLadder(Collider2D other)
+    {
+        if (IsInLayerMask(other.gameObject.layer, ladderLayers))
+        {
+            ladderColliders.Add(other);
+        }
     }
 
     private void UpdateGroundContact(Collision2D collision)
     {
         bool isGroundLayer = IsInLayerMask(collision.gameObject.layer, groundLayers);
         bool hasGroundContact = false;
+        bool hasWallContact = false;
+        float wallDirection = 0f;
 
-        if (isGroundLayer)
+        for (int i = 0; i < collision.contactCount; i++)
         {
-            for (int i = 0; i < collision.contactCount; i++)
+            Vector2 normal = collision.GetContact(i).normal;
+            if (isGroundLayer && normal.y > 0.5f)
             {
-                if (collision.GetContact(i).normal.y > 0.5f)
-                {
-                    hasGroundContact = true;
-                    break;
-                }
+                hasGroundContact = true;
+            }
+
+            if (Mathf.Abs(normal.x) > 0.5f)
+            {
+                hasWallContact = true;
+                wallDirection = Mathf.Sign(normal.x);
             }
         }
 
@@ -227,6 +276,35 @@ public class PlayerMovement : MonoBehaviour
         }
 
         isGrounded = groundColliders.Count > 0;
+        if (hasWallContact)
+        {
+            wallContacts[collision.collider] = wallDirection;
+        }
+        else
+        {
+            wallContacts.Remove(collision.collider);
+        }
+
+        if (isGrounded)
+        {
+            airJumpsRemaining = extraAirJumps;
+        }
+    }
+
+    private float GetWallJumpDirection()
+    {
+        float direction = 0f;
+        foreach (float contactDirection in wallContacts.Values)
+        {
+            direction += contactDirection;
+        }
+
+        if (Mathf.Abs(direction) > 0.01f)
+        {
+            return Mathf.Sign(direction);
+        }
+
+        return playerSprite != null && playerSprite.flipX ? 1f : -1f;
     }
 
     private static bool IsInLayerMask(int layer, LayerMask layerMask)
